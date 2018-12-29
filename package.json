@@ -1,0 +1,14 @@
+{
+  "name": "docker_web_app",
+  "version": "1.0.0",
+  "description": "Model budynku",
+  "main": "model_budynku.js",
+  "scripts": {
+    "start": "node model_budynku.js"
+  },
+  "author": "Oleksand Yeroshkin",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}
