@@ -13,15 +13,15 @@ const model_symulujacy_handle = require('./handles/model_symulujacy.json');
 
 // constants
 const module_name = "Czujnik temperatury zewnętrznej";
-const help = `Moduł: ${module_name}
+const help = `<pre>Moduł: ${module_name}
 API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
  - /temperature_outside	- zwraca temperature zewnetrzna w formacie
-				{ "temperature" : <temperature> }
+				{ "temperature" : &lt;temperature&gt; }
 			  Temperatura pobierana jest z serwera zewnetrznego
 			  (model symulacyjny).
-`;
+</pre>`;
 
 // configurables
 var port = 8101;

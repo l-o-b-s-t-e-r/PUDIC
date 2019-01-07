@@ -13,13 +13,13 @@ const model_sym_handle = require('./handles/model_symulujacy.json');
 
 // constants
 const module_name = "Czujnik wilgotnosci (na zewnatrz)";
-const help = `Moduł: ${module_name}
+const help = `<pre>Moduł: ${module_name}
 API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
  - /humidity_outside	- zwraca obiekt JSON zawierajacy wilgotnosc:
-				{ "humidity" : <humidity> }
-`;
+				{ "humidity" : &lt;humidity&gt; }
+</pre>`;
 
 // configurables
 var port = -1;

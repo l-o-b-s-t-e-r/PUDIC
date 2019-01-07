@@ -12,11 +12,11 @@ const self_handle = require('./handles/test.json');
 
 // constants
 const module_name = "Test";
-const help = `Moduł: ${module_name}
+const help = `<pre>Moduł: ${module_name}
 API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
-`;
+</pre>`;
 
 // configurables
 var port = -1;

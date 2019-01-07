@@ -5,7 +5,7 @@ const self_handle = require('./handles/model_symulujacy.json');
 
 var port = 8400;
 
-const help = `Aplikacja: Modele symulujące
+const help = `<pre>Aplikacja: Modele symulujące
 API - GET:
  - /			- zwraca nazwe aplikacji
  - /status		- zwraca obecny stan wewnetrzny
@@ -13,31 +13,31 @@ API - GET:
  - /rain		- zwraca obiekt
 				{ "is_raining" : true/false }
  - /rain_tank_level	- zwraca obiekt
-				{ "rain_tank_level" : <rain_tank_level> }
+				{ "rain_tank_level" : &lt;rain_tank_level&gt; }
  - /temperature/outside	- zwraca obiekt
-				{ "temperature" : <temperature> }
+				{ "temperature" : &lt;temperature&gt; }
  - /humidity/outside	- zwraca obiekt
-				{ "humidity" : <humidity> }
+				{ "humidity" : &lt;humidity&gt; }
  - /temperature/inside/{room_id}
 			- jesli pokoj istnieje, zwraca obiekt
-				{ "room_id" : <id>
-				  , "tempearture": <temperature> }
+				{ "room_id" : &lt;id&gt;
+				  , "tempearture": &lt;temperature&gt; }
 			  jesli pokoj nie istnieje, zwraca HTTP status 404
  - /window/{id}/state	- jesli okno istnieje, zwraca obiekt
-				{ "window_id" : <id>, "state" : true/false }
+				{ "window_id" : &lt;id&gt;, "state" : true/false }
 			  jesli okno nie istnieje, zwraca HTTP status 404
  - /door/{id}/state	- jesli drzwi istnieja, zwraca obiekt
-				{ "door_id" : <id>, "state" : true/false }
+				{ "door_id" : &lt;id&gt;, "state" : true/false }
 			  jesli drzwi nie istnieja, zwraca HTTP status 404
 
 API - PUT:
- - /window/{id}/change_state/{state:<true|false>}
+ - /window/{id}/change_state/{state:&lt;true|false&gt;}
 			- ustawia nowy stan okna (true - otwarte,
 			  false - zamkniete). Zwraca HTTP status code
 			   - 200 w przypadku sukcesu
 			   - 404 gdy nie ma takiego okna
 			   - 400 jesli nowy status jest rozny od true/false
-`;
+</pre>`;
 
 function definePort() {
 	if(argv.hasOwnProperty('p')) {

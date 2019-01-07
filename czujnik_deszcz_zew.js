@@ -13,13 +13,13 @@ const model_sym_handle = require('./handles/model_symulujacy.json');
 
 // constants
 const module_name = "Czujnik deszczu (na zewnatrz)";
-const help = `Moduł: ${module_name}
+const help = `<pre>Moduł: ${module_name}
 API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
  - /is_raining		- zwraca obiekt JSON z informacja o tym, czy pada
-				{ "is_raining" : <status=true/false> }
-`;
+				{ "is_raining" : &lt;status=true/false&gt; }
+</pre>`;
 
 // configurables
 var port = -1;
