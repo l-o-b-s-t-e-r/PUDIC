@@ -37,6 +37,9 @@ API - PUT:
 			   - 200 w przypadku sukcesu
 			   - 404 gdy nie ma takiego okna
 			   - 400 jesli nowy status jest rozny od true/false
+ - /temperature/{value}
+			- ustawia nowa wartosc temperatury na zewnatrz. 
+			  Zwraca HTTP code 200 w przypadku sukcesu.
 </pre>`;
 
 function definePort() {
@@ -154,4 +157,12 @@ app.put('/window/:windowId/change_state/:newState', (req, res) => {
 	else {
 		res.status(400).end();
 	}
+});
+
+app.put('/temperature/:value', (req, res) => {
+
+	var temperatureRaw = req.params["value"];
+	
+	conditions.temperature.outside = parseFloat(temperatureRaw);
+	res.status(200).end();
 });
