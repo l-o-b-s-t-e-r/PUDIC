@@ -5,6 +5,7 @@
 const express = require('express');
 const minimist = require('minimist');
 const http = require('http');
+const bodyParser = require('body-parser');
 
 // objects
 const app = express();
@@ -22,6 +23,19 @@ API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
 </pre>`;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+const options = {
+  hostname: 'localhost',
+  port: 8700,
+  path: '/new_house_state',
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+};
 
 // configurables
 var port = -1;
@@ -63,7 +77,7 @@ app.get('/help', (_, res) => res.send(help));
 
 app.put('/house_state', (req, res) => {
     var body = req.body;
-    console.log(body);
+    console.log(req.body);
 
     var change_state = true;
     //Tutaj trzeba dodac warunki przy ktorych zmieniamy stan aktuatorow lub nie.
@@ -73,7 +87,7 @@ app.put('/house_state', (req, res) => {
   		handle.path = '/new_house_state';
   		handle.method = 'PUT';
 
-  		var req = http.request(handle, (httpRes) => {
+  		var req = http.request(options, (httpRes) => {
   			console.log("http request started");
   			var responseStatusCode = httpRes.statusCode;
   			console.log("Request status code: " + responseStatusCode);
@@ -94,12 +108,14 @@ app.put('/house_state', (req, res) => {
   		} );
 
   		console.log("modul_decyzyjny after creating request");
+      console.log(new_house_state);
+      console.log(JSON.stringify(new_house_state));
 
   		req.on('error', (e) => {
   			console.log("Problem with request: " + e);
   		});
 
-      req.write("" + new_house_state);
+      req.write(JSON.stringify(new_house_state));
       req.end();
     } else {
       //nie wiem co tu powinno być

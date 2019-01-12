@@ -88,7 +88,7 @@ var conditions = {
 
 
 
-app.get('/', (req, res) => res.send("Modele symulujące\n"));
+app.get('/', (req, res) => res.send(conditions));
 
 app.get('/help', (_, res) => res.send(help));
 
@@ -148,6 +148,7 @@ app.get('/door/:doorId/state', (req, res) => {
 });
 
 app.put('/window/:windowId/change_state/:newState', (req, res) => {
+  console.log("change window state");
 	var windowId = parseInt(req.params["windowId"]);
 	if(!conditions.windows.hasOwnProperty(windowId)) {
 		res.status(404).end();
@@ -165,6 +166,7 @@ app.put('/window/:windowId/change_state/:newState', (req, res) => {
 });
 
 app.put('/door/:doorId/change_state/:newState', (req, res) => {
+  console.log("change door state");
 	var doorId = parseInt(req.params["doorId"]);
 	if(!conditions.doors.hasOwnProperty(doorId)) {
 		res.status(404).end();

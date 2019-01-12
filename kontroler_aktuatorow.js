@@ -5,6 +5,7 @@
 const express = require('express');
 const minimist = require('minimist');
 const http = require('http');
+const bodyParser = require('body-parser');
 
 // objects
 const app = express();
@@ -22,6 +23,9 @@ API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
 </pre>`;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // configurables
 var port = -1;
@@ -53,6 +57,7 @@ app.get('/help', (_, res) => res.send(help));
 
 app.put('/new_house_state', (req, res) => {
     var body = req.body;
+    console.log("/new_house_state");
     console.log(body);
 
     var handle_okno_1 = aktuator_okna_1;
@@ -122,6 +127,6 @@ app.put('/new_house_state', (req, res) => {
       console.log("Problem with request: " + e);
     });
 
-    req_drzwi_1.write({});
+    req_drzwi_1.write("");
     req_drzwi_1.end();
 });

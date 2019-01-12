@@ -98,7 +98,7 @@ app.put('/window/:newState', (req, res) => {
 			console.log("Problem with request: " + e);
 		});
 
-    req.write({});
+    req.write("");
     req.end();
 	}
 	else {

@@ -97,11 +97,11 @@ app.put('/door/:newState', (req, res) => {
 		req.on('error', (e) => {
 			console.log("Problem with request: " + e);
 		});
+
+    req.write("");
+    req.end();
 	}
 	else {
 		res.status(400).end();
 	}
-
-  req.write({});
-  req.end();
 });

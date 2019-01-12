@@ -5,6 +5,7 @@
 const express = require('express');
 const minimist = require('minimist');
 const http = require('http');
+const bodyParser = require('body-parser');
 
 // objects
 const app = express();
@@ -21,6 +22,9 @@ API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
 </pre>`;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // configurables
 var port = -1;
@@ -52,7 +56,7 @@ app.get('/help', (_, res) => res.send(help));
 
 app.put('/house_state', (req, res) => {
     var body = req.body;
-    console.log(body);
+    console.log(body.toString());
 		var handle = modul_decyzyjny;
 		handle.path = '/house_state';
 		handle.method = 'PUT';

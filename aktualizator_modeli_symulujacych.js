@@ -88,6 +88,9 @@ app.put('/window/:windowId/change_state/:newState', (req, res) => {
     req.on('error', (e) => {
       console.log("Problem with request: " + e);
     });
+
+    req.write("");
+    req.end();
   }
   else {
     res.status(400).end();
@@ -132,6 +135,9 @@ app.put('/door/:doorId/change_state/:newState', (req, res) => {
     req.on('error', (e) => {
       console.log("Problem with request: " + e);
     });
+
+    req.write("");
+    req.end();
   }
   else {
     res.status(400).end();

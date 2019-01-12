@@ -9,6 +9,7 @@
   "author": "Oleksand Yeroshkin",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "minimist": "^1.2.0"
   }

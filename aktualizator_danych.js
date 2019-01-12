@@ -5,6 +5,7 @@
 const express = require('express');
 const minimist = require('minimist');
 const http = require('http');
+const bodyParser = require('body-parser');
 
 // objects
 const app = express();
@@ -22,6 +23,9 @@ API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
 </pre>`;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // configurables
 var port = -1;
