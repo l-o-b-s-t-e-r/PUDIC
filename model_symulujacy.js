@@ -1,10 +1,13 @@
 const express = require('express');
 const app = express();
+const minimist = require('minimist');
+const argv = minimist(process.argv.slice(2));
 
 const self_handle = require('./handles/model_symulujacy.json');
 
 var port = 8400;
 
+const module_name = "Model symulujacy";
 const help = `<pre>Aplikacja: Modele symulujące
 API - GET:
  - /			- zwraca nazwe aplikacji
@@ -38,7 +41,7 @@ API - PUT:
 			   - 404 gdy nie ma takiego okna
 			   - 400 jesli nowy status jest rozny od true/false
  - /temperature/{value}
-			- ustawia nowa wartosc temperatury na zewnatrz. 
+			- ustawia nowa wartosc temperatury na zewnatrz.
 			  Zwraca HTTP code 200 w przypadku sukcesu.
 </pre>`;
 
@@ -55,8 +58,10 @@ function definePort() {
 	}
 }
 
-
-app.listen(port, () => console.log(`Listening on port ${port}`));
+definePort();
+app.listen(port, () =>
+	console.log(`${module_name} listening on port ${port}`)
+);
 
 
 // 0 means it's enterance corridor, e.g. temperature.inside.0 is temperature
@@ -159,10 +164,31 @@ app.put('/window/:windowId/change_state/:newState', (req, res) => {
 	}
 });
 
+app.put('/door/:doorId/change_state/:newState', (req, res) => {
+	var doorId = parseInt(req.params["doorId"]);
+	if(!conditions.doors.hasOwnProperty(doorId)) {
+		res.status(404).end();
+	}
+
+	var newStateRaw = req.params["newState"].toLowerCase();
+
+	if(newStateRaw === 'true' || newStateRaw === 'false') {
+		conditions.doors[doorId] = (newStateRaw == 'true');
+		res.status(200).end();
+	}
+	else {
+		res.status(400).end();
+	}
+});
+
 app.put('/temperature/:value', (req, res) => {
 
 	var temperatureRaw = req.params["value"];
-	
+
 	conditions.temperature.outside = parseFloat(temperatureRaw);
 	res.status(200).end();
+});
+
+app.get('/actual_state', (req, res) => {
+  res.send(conditions)
 });

@@ -8,19 +8,19 @@ const app = express();
 const argv = minimist(process.argv.slice(2));
 
 // handles
-const self_handle = require('./handles/aktuator_okna_1.json');
+const self_handle = require('./handles/aktuator_drzwi_1.json');
 const aktualizator_modeli_symulujacych_handle = require('./handles/aktualizator_modeli_symulujacych.json');
 
 // constants
-const module_name = "Aktuator okna 1";
+const module_name = "Aktuator drzwi 1";
 const help = `<pre>Moduł: ${module_name}
 API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
 
 API - PUT:
- - /window/{state:&lt;true|false&gt;}
-			- ustawia nowy stan okna (true - otwarte,
+ - /door/{state:&lt;true|false&gt;}
+			- ustawia nowy stan drzwi (true - otwarte,
 			  false - zamkniete). Zwraca HTTP status code
 			   - 200 w przypadku sukcesu
 			   - 400 jesli nowy status jest rozny od true/false
@@ -58,15 +58,15 @@ app.get('/', (_, res) => res.send(module_name));
 
 app.get('/help', (_, res) => res.send(help));
 
-app.put('/window/:newState', (req, res) => {
-	var windowId = 1;
+app.put('/door/:newState', (req, res) => {
+	var doorId = 1;
 
 	var newStateRaw = req.params["newState"].toLowerCase();
 
 	if(newStateRaw === 'true' || newStateRaw === 'false') {
 
 		var handle = aktualizator_modeli_symulujacych_handle;
-		handle.path = '/window/' + windowId + '/change_state/' + newStateRaw;
+		handle.path = '/door/' + doorId + '/change_state/' + newStateRaw;
 		handle.method = 'PUT';
 
 		console.log("making request to: ");
@@ -97,11 +97,11 @@ app.put('/window/:newState', (req, res) => {
 		req.on('error', (e) => {
 			console.log("Problem with request: " + e);
 		});
-
-    req.write({});
-    req.end();
 	}
 	else {
 		res.status(400).end();
 	}
+
+  req.write({});
+  req.end();
 });

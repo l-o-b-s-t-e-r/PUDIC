@@ -40,7 +40,7 @@ function definePort() {
 
 // Initial configuration
 definePort();
-app.listen(port, () => 
+app.listen(port, () =>
 	console.log(`${module_name} listening on port ${port}`)
 );
 

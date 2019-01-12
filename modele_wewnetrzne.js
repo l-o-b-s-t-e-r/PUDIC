@@ -1,3 +1,6 @@
+// TODO make handle to modele_wewnetrzne
+// TODO implement GET: /update
+
 // requires
 const express = require('express');
 const minimist = require('minimist');
@@ -8,26 +11,15 @@ const app = express();
 const argv = minimist(process.argv.slice(2));
 
 // handles
-const self_handle = require('./handles/aktuator_okna_1.json');
-const aktualizator_modeli_symulujacych_handle = require('./handles/aktualizator_modeli_symulujacych.json');
+const self_handle = require('./handles/modele_wewnetrzne.json');
+const modul_decyzyjny = require('./handles/modul_decyzyjny.json');
 
 // constants
-const module_name = "Aktuator okna 1";
+const module_name = "Modele wewnetrzne";
 const help = `<pre>Moduł: ${module_name}
 API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
-
-API - PUT:
- - /window/{state:&lt;true|false&gt;}
-			- ustawia nowy stan okna (true - otwarte,
-			  false - zamkniete). Zwraca HTTP status code
-			   - 200 w przypadku sukcesu
-			   - 400 jesli nowy status jest rozny od true/false
-               - 500 jesli otrzymano status inny od 200 od zewnetrznego serwera
-
-
-UWAGA - NA CHWILE OBECNA NIE DZIALA
 </pre>`;
 
 // configurables
@@ -58,21 +50,14 @@ app.get('/', (_, res) => res.send(module_name));
 
 app.get('/help', (_, res) => res.send(help));
 
-app.put('/window/:newState', (req, res) => {
-	var windowId = 1;
-
-	var newStateRaw = req.params["newState"].toLowerCase();
-
-	if(newStateRaw === 'true' || newStateRaw === 'false') {
-
-		var handle = aktualizator_modeli_symulujacych_handle;
-		handle.path = '/window/' + windowId + '/change_state/' + newStateRaw;
+app.put('/house_state', (req, res) => {
+    var body = req.body;
+    console.log(body);
+		var handle = modul_decyzyjny;
+		handle.path = '/house_state';
 		handle.method = 'PUT';
 
-		console.log("making request to: ");
-		console.log(handle);
-
-		var req = http.request( handle, (httpRes) => {
+		var req = http.request(handle, (httpRes) => {
 			console.log("http request started");
 			var responseStatusCode = httpRes.statusCode;
 			console.log("Request status code: " + responseStatusCode);
@@ -98,10 +83,6 @@ app.put('/window/:newState', (req, res) => {
 			console.log("Problem with request: " + e);
 		});
 
-    req.write({});
+    req.write("" + body);
     req.end();
-	}
-	else {
-		res.status(400).end();
-	}
 });

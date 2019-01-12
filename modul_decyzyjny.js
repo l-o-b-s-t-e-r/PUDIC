@@ -11,12 +11,12 @@ const app = express();
 const argv = minimist(process.argv.slice(2));
 
 // handles
-const self_handle = require('./handles/aktualizator_danych.json');
-const model_symulujacy = require('./handles/model_symulujacy.json');
-const modele_wewnetrzne = require('./handles/modele_wewnetrzne.json')
+const self_handle = require('./handles/modul_decyzyjny.json');
+const kontroler_aktuatorow = require('./handles/kontroler_aktuatorow.json');
+const model_symulujacy = require('./handles/model_symulujacy.json')
 
 // constants
-const module_name = "Aktualizator danych";
+const module_name = "Modul decyzyjny";
 const help = `<pre>Moduł: ${module_name}
 API:
  - /			- zwraca nazwe aplikacji
@@ -46,31 +46,34 @@ app.listen(port, () =>
 	console.log(`${module_name} listening on port ${port}`)
 );
 
+var new_house_state = {
+	"windows" : {
+	   1 : false,
+     2 : false
+	},
+  "doors" : {
+	   1 : false
+	}
+};
+
 // API definition
 app.get('/', (_, res) => res.send(module_name));
 
 app.get('/help', (_, res) => res.send(help));
 
-app.get('/update', (_, res) => {
-	var handle = model_symulujacy;
-	handle.path = '/actual_state';
+app.put('/house_state', (req, res) => {
+    var body = req.body;
+    console.log(body);
 
-	http.get( handle, (httpRes) => {
-		var data = '';
+    var change_state = true;
+    //Tutaj trzeba dodac warunki przy ktorych zmieniamy stan aktuatorow lub nie.
 
-		httpRes.on('data', (chunk) => {
-      console.log(chunk);
-			data += chunk;
-		});
+    if (change_state) {
+      var handle = kontroler_aktuatorow;
+  		handle.path = '/new_house_state';
+  		handle.method = 'PUT';
 
-		httpRes.on('end', () => {
-			var modelResponse = JSON.parse(data);
-
-      var handle_modele_wewnetrzne = modele_wewnetrzne;
-      handle_modele_wewnetrzne.path = '/house_state';
-      handle_modele_wewnetrzne.method = 'PUT';
-
-      var req = http.request(handle_modele_wewnetrzne, (httpRes) => {
+  		var req = http.request(handle, (httpRes) => {
   			console.log("http request started");
   			var responseStatusCode = httpRes.statusCode;
   			console.log("Request status code: " + responseStatusCode);
@@ -90,15 +93,15 @@ app.get('/update', (_, res) => {
   			});
   		} );
 
-  		console.log("after creating request");
-      console.log(modelResponse);
+  		console.log("modul_decyzyjny after creating request");
 
   		req.on('error', (e) => {
   			console.log("Problem with request: " + e);
   		});
 
-      req.write("" + modelResponse);
+      req.write("" + new_house_state);
       req.end();
-		});
-	});
+    } else {
+      //nie wiem co tu powinno być
+    }
 });
