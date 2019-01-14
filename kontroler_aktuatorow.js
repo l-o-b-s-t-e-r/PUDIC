@@ -117,7 +117,7 @@ app.put('/new_house_state', (req, res) => {
 
     // check if doors need to be updated;
     if(toUpdate.hasOwnProperty('doors')) {
-        // TODO update all doors that are in the request
+        // update all doors that are in the request
         for(singleDoor in toUpdate.doors) {
             var newValue = toUpdate.doors[singleDoor];
             requestStack.push(
@@ -126,7 +126,7 @@ app.put('/new_house_state', (req, res) => {
         }
     }
 
-    if(requestStack.length > 0) {
+    if(requestStack.length === 0) {
         res.status(200).end();
     }
     else {
