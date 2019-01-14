@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const minimist = require('minimist');
 const argv = minimist(process.argv.slice(2));
+const bodyParser = require('body-parser');
 
 const self_handle = require('./handles/model_symulujacy.json');
 
@@ -43,7 +44,13 @@ API - PUT:
  - /temperature/{value}
 			- ustawia nowa wartosc temperatury na zewnatrz.
 			  Zwraca HTTP code 200 w przypadku sukcesu.
+ - /update_model
+            - ustawia nowa zawartosc pola 'conditions'. Przyjmuje obiekt JSON
+              jako cialo zapytania i bezwarunkowo ustawia jako nowe warunki.
 </pre>`;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 function definePort() {
 	if(argv.hasOwnProperty('p')) {
@@ -189,6 +196,15 @@ app.put('/temperature/:value', (req, res) => {
 
 	conditions.temperature.outside = parseFloat(temperatureRaw);
 	res.status(200).end();
+});
+
+
+app.put('/update_model', (req, res) => {
+    console.log("Received 'model_symulujacy' - /update_model: " + JSON.stringify(req.body));
+
+    var toUpdate = req.body;
+    conditions = toUpdate;
+    res.status(200).end();
 });
 
 app.get('/actual_state', (req, res) => {
