@@ -50,96 +50,50 @@ app.get('/', (_, res) => res.send(module_name));
 
 app.get('/help', (_, res) => res.send(help));
 
-app.put('/window/:windowId/change_state/:newState', (req, res) => {
-  var windowId = req.params["windowId"];
-  var newStateRaw = req.params["newState"].toLowerCase();
+app.put('/:type/:id/change_state/:newState', (req, res) => {
+    var type = req.params["type"];
+    var id = req.params["id"];
+    var newStateRaw = req.params["newState"].toLowerCase();
 
-  if(newStateRaw === 'true' || newStateRaw === 'false') {
+    if(newStateRaw === 'true' || newStateRaw === 'false') {
 
-    var handle = model_symulujacy_handle;
-    handle.path = '/window/' + windowId + '/change_state/' + newStateRaw;
-    handle.method = 'PUT';
+        var handle = model_symulujacy_handle;
+        handle.path = '/' + type + '/' + id + '/change_state/' + newStateRaw;
+        handle.method = 'PUT';
 
-    console.log("making request to: ");
-    console.log(handle);
+        console.log("making request to: ");
+        console.log(handle);
 
-    var req = http.request( handle, (httpRes) => {
-      console.log("http request started");
-      var responseStatusCode = httpRes.statusCode;
-      console.log("Request status code: " + responseStatusCode);
+        var req = http.request( handle, (httpRes) => {
+            console.log("http request started");
+            var responseStatusCode = httpRes.statusCode;
+            console.log("Request status code: " + responseStatusCode);
 
-      httpRes.on('data', (chunk) => {
-        console.log(chunk);
-      });
+            httpRes.on('data', (chunk) => {
+                console.log(chunk);
+            });
 
-      httpRes.on('end', () => {
-        console.log("RESPONSE END");
-        if(responseStatusCode == 200) {
-          res.status(200).end();
-        }
-        else {
-          res.status(500).end();
-        }
-      });
-    } );
+            httpRes.on('end', () => {
+                console.log("RESPONSE END");
+                if(responseStatusCode == 200) {
+                    res.status(200).end();
+                }
+                else {
+                    res.status(500).end();
+                }
+            });
+        } );
 
-    console.log("after creating request");
+        console.log("after creating request");
 
-    req.on('error', (e) => {
-      console.log("Problem with request: " + e);
-    });
+        req.on('error', (e) => {
+          console.log("Problem with request: " + e);
+        });
 
-    req.write("");
-    req.end();
-  }
-  else {
-    res.status(400).end();
-  }
-});
-
-app.put('/door/:doorId/change_state/:newState', (req, res) => {
-  var doorId = req.params["doorId"];
-  var newStateRaw = req.params["newState"].toLowerCase();
-
-  if(newStateRaw === 'true' || newStateRaw === 'false') {
-
-    var handle = model_symulujacy_handle;
-    handle.path = '/door/' + doorId + '/change_state/' + newStateRaw;
-    handle.method = 'PUT';
-
-    console.log("making request to: ");
-    console.log(handle);
-
-    var req = http.request( handle, (httpRes) => {
-      console.log("http request started");
-      var responseStatusCode = httpRes.statusCode;
-      console.log("Request status code: " + responseStatusCode);
-
-      httpRes.on('data', (chunk) => {
-        console.log(chunk);
-      });
-
-      httpRes.on('end', () => {
-        console.log("RESPONSE END");
-        if(responseStatusCode == 200) {
-          res.status(200).end();
-        }
-        else {
-          res.status(500).end();
-        }
-      });
-    } );
-
-    console.log("after creating request");
-
-    req.on('error', (e) => {
-      console.log("Problem with request: " + e);
-    });
-
-    req.write("");
-    req.end();
-  }
-  else {
-    res.status(400).end();
-  }
+        req.write("");
+        req.end();
+    }
+    else {
+        res.status(400).end();
+    }
 });
