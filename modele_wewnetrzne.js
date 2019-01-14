@@ -62,36 +62,36 @@ app.put('/house_state', (req, res) => {
     var body = req.body;
     console.log("Received 'modele_wewnetrzne': " + JSON.stringify(body));
     conditions = body;
-		var handle = modul_decyzyjny;
-		handle.path = '/house_state';
-		handle.method = 'PUT';
 
-		var req = http.request(handle, (httpRes) => {
-			console.log("http request started");
-			var responseStatusCode = httpRes.statusCode;
-			console.log("Request status code: " + responseStatusCode);
+    var handle = modul_decyzyjny;
+    handle.path = '/house_state';
+    handle.method = 'PUT';
+    handle.headers = { 'Content-Type': 'application/json' };
 
-			httpRes.on('data', (chunk) => {
-				console.log(chunk);
-			});
+    var innerReq = http.request(handle, (httpRes) => {
+        var responseStatusCode = httpRes.statusCode;
+        console.log(JSON.stringify(handle) + "\n -- Request status code: " + responseStatusCode);
 
-			httpRes.on('end', () => {
-				console.log("RESPONSE END");
-				if(responseStatusCode == 200) {
-					res.status(200).end();
-				}
-				else {
-					res.status(500).end();
-				}
-			});
-		} );
+        httpRes.on('data', (chunk) => {
+            console.log(chunk);
+        });
 
-		console.log("after creating request");
+        httpRes.on('end', () => {
+            console.log("RESPONSE END");
+            if(responseStatusCode == 200) {
+                res.status(200).end();
+            }
+            else {
+                res.status(500).end();
+            }
+        });
+    } );
 
-		req.on('error', (e) => {
-			console.log("Problem with request: " + e);
-		});
+    innerReq.on('error', (e) => {
+        console.log("!!! Problem with request: " + e);
+    });
 
-    req.write("" + body);
-    req.end();
+    console.log("sending 'modele_wewnetrzne' -> 'modul_decyzyjny': " + JSON.stringify(body));
+    innerReq.write(JSON.stringify(body));
+    innerReq.end();
 });

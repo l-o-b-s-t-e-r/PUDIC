@@ -23,6 +23,14 @@ API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
 </pre>`;
+const TAG = '"' + module_name + '": ';
+
+const ROOMS_MODEL = {
+    0 : {
+        "windows" : [1, 2],
+        "doors" : [1]
+    }
+};
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -54,13 +62,61 @@ function definePort() {
 	}
 }
 
+function fillNewStateForWindows(stateBefore, conditions) {
+    var newState = stateBefore;
+
+    if(
+       conditions.temperature.outside <= 10
+       || conditions.temperature.outside >= 30
+       || conditions.raining
+       || conditions.humidity > 90
+       || conditions.humidity < 15
+    ) {
+        console.log(TAG + "unconditional windows close");
+        newState.windows = {};
+        for(singleRoom in ROOMS_MODEL) {
+            var windowsInRoom = ROOMS_MODEL[singleRoom].windows;
+            windowsInRoom.forEach((item, index, array) => {
+                newState.windows[item] = false;
+            });
+        }
+    }
+    else {
+        console.log(TAG + "windows not closed, checking other conditions");
+        var outsideTemperature = conditions.temperature.outside;
+        // here we are going to process every room
+        for(singleRoom in ROOMS_MODEL) {
+            var roomTemperature = conditions.temperature.inside[singleRoom];
+            if(
+                (roomTemperature <= 20 && outsideTemperature > 20)
+                || (roomTemperature > 20 && outsideTemperature >= roomTemperature)
+            ) {
+
+                console.log(TAG + "opening windows for room " + singleRoom);
+
+                if(!newState.hasOwnProperty("windows")) {
+                    newState.windows = {};
+                }
+
+                var windowsInRoom = ROOMS_MODEL[singleRoom].windows;
+                windowsInRoom.forEach((item, index, array) => {
+                    newState.windows[item] = true;
+                });
+            }
+            // else do nothing?
+        }
+    }
+
+    return newState;
+}
+
 // Initial configuration
 definePort();
 app.listen(port, () =>
 	console.log(`${module_name} listening on port ${port}`)
 );
 
-var new_house_state = {
+/*var new_house_state = {
 	"windows" : {
 	   1 : false,
      2 : false
@@ -68,7 +124,7 @@ var new_house_state = {
   "doors" : {
 	   1 : false
 	}
-};
+};*/
 
 // API definition
 app.get('/', (_, res) => res.send(module_name));
@@ -76,48 +132,46 @@ app.get('/', (_, res) => res.send(module_name));
 app.get('/help', (_, res) => res.send(help));
 
 app.put('/house_state', (req, res) => {
-    var body = req.body;
-    console.log(req.body);
+    console.log("Received 'modul_decyzyjny': " + JSON.stringify(req.body));
 
-    var change_state = true;
+    var conditions = req.body;
+
+    var newState = {}
+
     //Tutaj trzeba dodac warunki przy ktorych zmieniamy stan aktuatorow lub nie.
 
-    if (change_state) {
-      var handle = kontroler_aktuatorow;
-  		handle.path = '/new_house_state';
-  		handle.method = 'PUT';
+    // window section
+    newState = fillNewStateForWindows(newState, conditions);
 
-  		var req = http.request(options, (httpRes) => {
-  			console.log("http request started");
-  			var responseStatusCode = httpRes.statusCode;
-  			console.log("Request status code: " + responseStatusCode);
+    var handle = kontroler_aktuatorow;
+    handle.path = '/new_house_state';
+    handle.method = 'PUT';
+    handle.headers = { 'Content-Type': 'application/json' };
 
-  			httpRes.on('data', (chunk) => {
-  				console.log(chunk);
-  			});
+    var req = http.request(options, (httpRes) => {
+        var responseStatusCode = httpRes.statusCode;
 
-  			httpRes.on('end', () => {
-  				console.log("RESPONSE END");
-  				if(responseStatusCode == 200) {
-  					res.status(200).end();
-  				}
-  				else {
-  					res.status(500).end();
-  				}
-  			});
-  		} );
+        httpRes.on('data', (chunk) => {
+            console.log(chunk);
+        });
 
-  		console.log("modul_decyzyjny after creating request");
-      console.log(new_house_state);
-      console.log(JSON.stringify(new_house_state));
+        httpRes.on('end', () => {
+            console.log("RESPONSE END");
+            if(responseStatusCode == 200) {
+                res.status(200).end();
+            }
+            else {
+                res.status(500).end();
+            }
+        });
+    } );
 
-  		req.on('error', (e) => {
-  			console.log("Problem with request: " + e);
-  		});
+    console.log("Sending 'modul_decyzyjny' -> 'kontroler_aktuatorow': " + JSON.stringify(newState));
 
-      req.write(JSON.stringify(new_house_state));
-      req.end();
-    } else {
-      //nie wiem co tu powinno być
-    }
+    req.on('error', (e) => {
+        console.log("Problem with request: " + e);
+    });
+
+    req.write(JSON.stringify(newState));
+    req.end();
 });

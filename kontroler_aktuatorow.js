@@ -1,6 +1,3 @@
-// TODO make handle to modele_wewnetrzne
-// TODO implement GET: /update
-
 // requires
 const express = require('express');
 const minimist = require('minimist');
@@ -44,6 +41,50 @@ function definePort() {
 	}
 }
 
+function getHandleFor(type, index) {
+    // TODO it could use checking if file exists...
+    switch(type) {
+        case 'window':
+            return require('./handles/aktuator_okna_' + index + '.json');
+        case 'door':
+            return require('./handles/aktuator_drzwi_' + index + '.json');
+    }
+    return null;
+}
+
+function getHTTPPutRequestPromise(handle, path) {
+    var innerHandle = handle;
+    innerHandle.path = path;
+    innerHandle.method = 'PUT';
+    innerHandle.headers = { 'Content-Type': 'application/json' };
+
+    return new Promise((resolve, reject) => {
+        var req = http.request(innerHandle, (httpRes) => {
+            var responseStatusCode = httpRes.statusCode;
+
+            console.log("Request from 'kontroler_aktuatorow':"
+                + "\n -- target: " + JSON.stringify(innerHandle)
+                + "\n -- response status code: " + responseStatusCode);
+
+            httpRes.on('data', (chunk) => {
+                console.log(chunk);
+            });
+
+            httpRes.on('end', () => {
+                if(responseStatusCode == 200) {
+                  resolve(200);
+                }
+                else {
+                  reject(500);
+                }
+            });
+        });
+
+        req.write("");
+        req.end();
+    });
+}
+
 // Initial configuration
 definePort();
 app.listen(port, () =>
@@ -56,77 +97,48 @@ app.get('/', (_, res) => res.send(module_name));
 app.get('/help', (_, res) => res.send(help));
 
 app.put('/new_house_state', (req, res) => {
-    var body = req.body;
-    console.log("/new_house_state");
-    console.log(body);
+    console.log("Received 'kontroler_aktuatorow' - /new_house_state: " + JSON.stringify(req.body));
 
-    var handle_okno_1 = aktuator_okna_1;
-    handle_okno_1.path = '/window/' + body.windows[1];
-    handle_okno_1.method = 'PUT';
+    var toUpdate = req.body;
+    var requestStack = [];
 
-    var req_okno_1 = http.request(handle_okno_1, (httpRes) => {
-      console.log("http request started");
-      var responseStatusCode = httpRes.statusCode;
-      console.log("Request status code: " + responseStatusCode);
-
-      httpRes.on('data', (chunk) => {
-        console.log(chunk);
-      });
-
-      httpRes.on('end', () => {
-        console.log("RESPONSE END");
-        if(responseStatusCode == 200) {
-          res.status(200).end();
+    // check if windows need to be updated;
+    if(toUpdate.hasOwnProperty('windows')) {
+        // update all windows that are in request
+        for(singleWindow in toUpdate.windows) {
+            var newValue = toUpdate.windows[singleWindow];
+            requestStack.push(
+                getHTTPPutRequestPromise(
+                    getHandleFor('window', singleWindow)
+                    , '/window/' + newValue)
+            );
         }
-        else {
-          res.status(500).end();
+    }
+
+    // check if doors need to be updated;
+    if(toUpdate.hasOwnProperty('doors')) {
+        // TODO update all doors that are in the request
+        for(singleDoor in toUpdate.doors) {
+            var newValue = toUpdate.doors[singleDoor];
+            requestStack.push(
+                getHTTPPutRequestPromise(getHandleFor('door', singleDoor), '/door/' + newValue)
+            );
         }
-      });
-    } );
+    }
 
-    console.log("after creating request");
+    if(requestStack.length > 0) {
+        res.status(200).end();
+    }
+    else {
+        Promise.all(requestStack).then(responseCodes => {
+            console.log(responseCodes);
+            res.status(200).end();
+        })
+        .catch(e => {
+            console.log('kontroler_aktuatorow queue error: ' + e);
+        });
+    }
 
-    req_okno_1.on('error', (e) => {
-      console.log("Problem with request: " + e);
-    });
+    // TODO notify 'aktualizator_modeli_symulujacych' that it's all
 
-    req_okno_1.write("");
-    req_okno_1.end();
-
-    //##################################################
-    //##################################################
-    //##################################################
-
-    var handle_drzwi_1 = aktuator_drzwi_1;
-    handle_drzwi_1.path = '/door/' + body.doors[1];
-    handle_drzwi_1.method = 'PUT';
-
-    var req_drzwi_1 = http.request(handle_drzwi_1, (httpRes) => {
-      console.log("http request started");
-      var responseStatusCode = httpRes.statusCode;
-      console.log("Request status code: " + responseStatusCode);
-
-      httpRes.on('data', (chunk) => {
-        console.log(chunk);
-      });
-
-      httpRes.on('end', () => {
-        console.log("RESPONSE END");
-        if(responseStatusCode == 200) {
-          res.status(200).end();
-        }
-        else {
-          res.status(500).end();
-        }
-      });
-    } );
-
-    console.log("after creating request");
-
-    req_drzwi_1.on('error', (e) => {
-      console.log("Problem with request: " + e);
-    });
-
-    req_drzwi_1.write("");
-    req_drzwi_1.end();
 });
