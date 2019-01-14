@@ -39,6 +39,42 @@ function definePort() {
 	}
 }
 
+function getSetModelPromise(newData) {
+     return new Promise((resolve, reject) => {
+       var handle = model_symulujacy_handle;
+       handle.path = '/update_model';
+       handle.method = 'PUT';
+       handle.headers = { 'Content-Type': 'application/json' };
+       var httpReq = http.request(handle, (httpRes) => {
+           var responseStatusCode = httpRes.statusCode;
+           httpRes.on('data', (chunk) => {
+               // ignore..?
+           });
+           httpRes.on('end', () => {
+               if(responseStatusCode == 200) {
+                   resolve(200);
+               }
+               else {
+                   console.log("Problem with request:" + "\n --- " + JSON.stringify(handle) + "\n --- " + responseStatusCode);
+                   reject(500);
+               }
+           });
+       });
+       httpReq.on('error', (e) => {
+           console.log("Problem with request (outer): " + "\n --- " + JSON.stringify(handle) + "\n --- " + e);
+       });
+       httpReq.write(JSON.stringify(newData));
+       httpReq.end();
+    });
+}
+
+function applyRules(modelObject) {
+    // TODO implement me!
+    var newModelObject = modelObject;
+    newModelObject.temperature.outside = 3.0;
+    return newModelObject;
+}
+
 // Initial configuration
 definePort();
 app.listen(port, () =>
@@ -96,4 +132,40 @@ app.put('/:type/:id/change_state/:newState', (req, res) => {
     else {
         res.status(400).end();
     }
+});
+
+app.get('/notify_finished', (req, res) => {
+    // 1) get model from model_symulujacy
+    // 2) update model with rules
+    // 3) save model back
+
+    var pGetModel = new Promise((resolve, reject) => {
+        var handle = model_symulujacy_handle;
+        handle.path = '/';
+        http.get(handle, (httpRes) => {
+           var data = "";
+           httpRes.on('data', (chunk) => {
+               data += chunk;
+           });
+           httpRes.on('end', () => {
+               var response = JSON.parse(data);
+               resolve(response);
+           });
+        });
+    });
+
+
+    pGetModel.then((result) => {
+        return applyRules(result);
+    })
+    .then((result) => {
+        return getSetModelPromise(result);
+    })
+    .then((httpResult) => {
+        res.status(200).end();
+    })
+    .catch((e) => {
+        console.log("/notify_finished - Error handling request:" + e);
+        res.status(500).end();
+    });
 });
