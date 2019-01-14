@@ -14,7 +14,14 @@ const argv = minimist(process.argv.slice(2));
 // handles
 const self_handle = require('./handles/aktualizator_danych.json');
 const model_symulujacy = require('./handles/model_symulujacy.json');
-const modele_wewnetrzne = require('./handles/modele_wewnetrzne.json')
+const modele_wewnetrzne = require('./handles/modele_wewnetrzne.json');
+
+const czujnik_temp_zew = require('./handles/czujnik_temp_zew.json')
+const czujnik_wilg_zew = require('./handles/czujnik_wilg_zew.json')
+const czujnik_zbiornika_deszczowki = require('./handles/czujnik_zbiornika_deszczowki.json')
+const czujnik_deszcz_zew = require('./handles/czujnik_deszcz_zew.json')
+const czujnik_temp_pokoj_1 = require('./handles/czujnik_temp_pokoj_1.json')
+
 
 // constants
 const module_name = "Aktualizator danych";
@@ -23,6 +30,17 @@ API:
  - /			- zwraca nazwe aplikacji
  - /help		- zwraca pomoc
 </pre>`;
+const newConditionsPrototype = {
+        "temperature" : {
+            "outside" : null,
+            "inside" : {
+                0: null
+            }
+        },
+        "raining": null,
+        "humidity": null,
+        "rain_tank_level": null
+    };
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -44,6 +62,21 @@ function definePort() {
 	}
 }
 
+function getHTTPGetPromiseOf(handle, callback) {
+    return new Promise((resolve, reject) => {
+        http.get(handle, (httpRes) => {
+            var data = "";
+            httpRes.on('data', (chunk) => {
+                data += chunk;
+            });
+            httpRes.on('end', () => {
+                var response = JSON.parse(data);
+                resolve(response);
+            });
+        });
+    });
+}
+
 // Initial configuration
 definePort();
 app.listen(port, () =>
@@ -56,53 +89,71 @@ app.get('/', (_, res) => res.send(module_name));
 app.get('/help', (_, res) => res.send(help));
 
 app.get('/update', (_, res) => {
-	var handle = model_symulujacy;
-	handle.path = '/actual_state';
 
-	http.get( handle, (httpRes) => {
-		var data = '';
+    var handle_temp_zew = czujnik_temp_zew;
+    handle_temp_zew.path = '/temperature_outside'; // return { "temperature": <float> }
 
-		httpRes.on('data', (chunk) => {
-      console.log(chunk);
-			data += chunk;
-		});
+    var handle_wilg_zew = czujnik_wilg_zew;
+    handle_wilg_zew.path = '/humidity_outside'; // returns { "humidity": <float:0.0-100.0> }
 
-		httpRes.on('end', () => {
-			var modelResponse = JSON.parse(data);
+    var handle_deszczowka = czujnik_zbiornika_deszczowki;
+    handle_deszczowka.path = '/rain_tank_level'; // returns { "rain_tank_level" : <int:0-100> }
 
-      var handle_modele_wewnetrzne = modele_wewnetrzne;
-      handle_modele_wewnetrzne.path = '/house_state';
-      handle_modele_wewnetrzne.method = 'PUT';
+    var handle_deszcz = czujnik_deszcz_zew;
+    handle_deszcz.path = '/is_raining'; // returns { "is_raining": <true/false> }
 
-      var req = http.request(handle_modele_wewnetrzne, (httpRes) => {
-  			console.log("http request started");
-  			var responseStatusCode = httpRes.statusCode;
-  			console.log("Request status code: " + responseStatusCode);
+    var handle_temp_pokoj_1 = czujnik_temp_pokoj_1;
+    handle_temp_pokoj_1.path = '/temperature_inside';
+    // returns { "room_id" : <int>, "temperature": <float> }
 
-  			httpRes.on('data', (chunk) => {
-  				console.log(chunk);
-  			});
+    var handle_modele_wewnetrzne = modele_wewnetrzne;
+    handle_modele_wewnetrzne.path = '/house_state';
+    handle_modele_wewnetrzne.method = 'PUT';
+    handle_modele_wewnetrzne.headers = { 'Content-Type': 'application/json' };
 
-  			httpRes.on('end', () => {
-  				console.log("RESPONSE END");
-  				if(responseStatusCode == 200) {
-  					res.status(200).end();
-  				}
-  				else {
-  					res.status(500).end();
-  				}
-  			});
-  		} );
+    var newConditions = newConditionsPrototype;
 
-  		console.log("after creating request");
-      console.log(modelResponse);
+    getHTTPGetPromiseOf(handle_temp_zew).then((response) => {
+        newConditions.temperature.outside = response.temperature;
+        return getHTTPGetPromiseOf(handle_wilg_zew);
+    }).then((response) => {
+        newConditions.humidity = response.humidity;
+        return getHTTPGetPromiseOf(handle_deszczowka);
+    }).then((response) => {
+        newConditions.rain_tank_level = response.rain_tank_level;
+        return getHTTPGetPromiseOf(handle_deszcz);
+    }).then((response) => {
+        newConditions.raining = response.is_raining;
+        return getHTTPGetPromiseOf(handle_temp_pokoj_1);
+    }).then((response) => {
+        newConditions.temperature.inside[response.room_id] = response.temperature;
 
-  		req.on('error', (e) => {
-  			console.log("Problem with request: " + e);
-  		});
+        var modelResponse = newConditions;
 
-      req.write("" + modelResponse);
-      req.end();
-		});
-	});
+        var req = http.request(handle_modele_wewnetrzne, (httpRes) => {
+            var responseStatusCode = httpRes.statusCode;
+
+            httpRes.on('data', (chunk) => {
+                // ignore..?
+            });
+
+            httpRes.on('end', () => {
+                if(responseStatusCode == 200) {
+                    res.status(200).end();
+                }
+                else {
+                    res.status(500).end();
+                }
+            });
+        } );
+
+        console.log("Sending 'aktualizator_danych' -> 'modele_wewnetrzne' :" + JSON.stringify(modelResponse));
+
+        req.on('error', (e) => {
+            console.log("!!!! Problem with request: " + e);
+        });
+
+        req.write(JSON.stringify(modelResponse));
+        req.end();
+    });
 });

@@ -49,14 +49,19 @@ app.listen(port, () =>
 	console.log(`${module_name} listening on port ${port}`)
 );
 
+var conditions = {};
+
 // API definition
 app.get('/', (_, res) => res.send(module_name));
 
 app.get('/help', (_, res) => res.send(help));
 
+app.get('/status', (_, res) => res.send(conditions));
+
 app.put('/house_state', (req, res) => {
     var body = req.body;
-    console.log(body.toString());
+    console.log("Received 'modele_wewnetrzne': " + JSON.stringify(body));
+    conditions = body;
 		var handle = modul_decyzyjny;
 		handle.path = '/house_state';
 		handle.method = 'PUT';
