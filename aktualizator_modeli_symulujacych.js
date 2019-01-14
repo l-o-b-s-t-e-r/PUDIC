@@ -142,6 +142,10 @@ app.get('/notify_finished', (req, res) => {
     var pGetModel = new Promise((resolve, reject) => {
         var handle = model_symulujacy_handle;
         handle.path = '/';
+        // cleanup - IMPORTANT
+        delete(handle.method);
+        delete(handle.headers);
+
         http.get(handle, (httpRes) => {
            var data = "";
            httpRes.on('data', (chunk) => {

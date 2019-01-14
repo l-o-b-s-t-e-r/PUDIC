@@ -12,6 +12,7 @@ const argv = minimist(process.argv.slice(2));
 const self_handle = require('./handles/kontroler_aktuatorow.json');
 const aktuator_okna_1 = require('./handles/aktuator_okna_1.json');
 const aktuator_drzwi_1 = require('./handles/aktuator_drzwi_1.json');
+const aktualizator_modeli_symulujacych = require('./handles/aktualizator_modeli_symulujacych.json');
 
 // constants
 const module_name = "Kontroler aktuatorow";
@@ -126,16 +127,46 @@ app.put('/new_house_state', (req, res) => {
         }
     }
 
+    var pNotifyFinished = new Promise((resolve, reject) => {
+        var handle = aktualizator_modeli_symulujacych;
+        handle.path = '/notify_finished';
+
+        http.get(handle, (httpRes) => {
+            var httpStatusCode = httpRes.statusCode;
+            httpRes.on('data', (chunk) => {
+                // ignore
+            });
+            httpRes.on('end', () => {
+                if(httpStatusCode == 200) {
+                    resolve(200);
+                }
+                else {
+                    reject(500);
+                }
+            });
+        });
+    });
+
     if(requestStack.length === 0) {
-        res.status(200).end();
+        pNotifyFinished.then((result) => {
+            res.status(200).end();
+        })
+        .catch((e) => {
+            console.log("Oh my, we have an error");
+            res.status(500).end();
+        });
     }
     else {
         Promise.all(requestStack).then(responseCodes => {
             console.log(responseCodes);
+            return pNotifyFinished;
+        })
+        .then((result) => {
             res.status(200).end();
         })
         .catch(e => {
             console.log('kontroler_aktuatorow queue error: ' + e);
+            res.status(500).end();
         });
     }
 
