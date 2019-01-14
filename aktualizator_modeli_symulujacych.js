@@ -71,7 +71,7 @@ function getSetModelPromise(newData) {
 function applyRules(modelObject) {
     // TODO implement me!
     var newModelObject = modelObject;
-    newModelObject.temperature.outside = 3.0;
+    newModelObject.temperature.outside = modelObject.temperature.outside - 1;
     return newModelObject;
 }
 
