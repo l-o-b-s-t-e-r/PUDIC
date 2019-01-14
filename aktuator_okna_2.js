@@ -8,7 +8,7 @@ const app = express();
 const argv = minimist(process.argv.slice(2));
 
 // server definition
-const WINDOW_NUMBER = 1;
+const WINDOW_NUMBER = 2;
 
 // handles
 const self_handle = require('./handles/aktuator_okna_' + WINDOW_NUMBER + '.json');
