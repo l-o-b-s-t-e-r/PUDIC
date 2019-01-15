@@ -39,6 +39,16 @@ function definePort() {
 	}
 }
 
+function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+function cleanupHandle(handle) {
+    delete(handle.path);
+    delete(handle.method);
+    delete(handle.headers);
+}
+
 function getSetModelPromise(newData) {
      return new Promise((resolve, reject) => {
        var handle = model_symulujacy_handle;
@@ -68,11 +78,64 @@ function getSetModelPromise(newData) {
     });
 }
 
-function applyRules(modelObject) {
-    // TODO implement me!
-    var newModelObject = modelObject;
-    newModelObject.temperature.outside = modelObject.temperature.outside - 1;
-    return newModelObject;
+function getHTTPGetPromise(handle, path) {
+    cleanupHandle(handle);
+    var innerHandle = handle;
+    innerHandle.path = path;
+
+    return new Promise((resolve, reject) => {
+        http.get(innerHandle, (httpRes) => {
+            var data = "";
+            httpRes.on('data', (chunk) => {
+                data += chunk;
+            });
+            httpRes.on('end', () => {
+                var response = JSON.parse(data);
+                console.log("[" + port + "] Received from " + handle.port + path + ": " + JSON.stringify(response));
+                resolve(response);
+            });
+        });
+    });
+}
+
+function applyRules(conditions, buildingModel) {
+    var newConditions = clone(conditions);
+
+    var p = ' =+= '; // prefix
+
+    // calculate temperature value
+    for(singleRoom in buildingModel.rooms) {
+        console.log(p + " processing room " + singleRoom);
+        var windowsInRoom = buildingModel.rooms[singleRoom].windows;
+        if(windowsInRoom.length > 0) {
+            var numberOfOpenWindows = 0;
+            windowsInRoom.forEach((item, index, array) => {
+                if(conditions.windows[item]) {
+                    numberOfOpenWindows++;
+                }
+            });
+            if(numberOfOpenWindows > 0) {
+                var temperatureDelta = conditions.temperature.outside - conditions.temperature.inside[singleRoom];
+                console.log(p + " temperatureDelta: " + temperatureDelta);
+                var absoluteDelta = Math.abs(temperatureDelta);
+                if(absoluteDelta > 0) {
+                    if(absoluteDelta <= 1.0) {
+                        console.log(p + " setting new temperature to " + conditions.temperature.outside);
+                        newConditions.temperature.inside[singleRoom] = conditions.temperature.outside;
+                    }
+                    else {
+                        var change = (Math.min(numberOfOpenWindows, 5) * 0.2 * temperatureDelta);
+                        console.log(p + " changing temperature by value: " + change);
+                        newConditions.temperature.inside[singleRoom] += change;
+                    }
+                }
+            }
+        }
+    }
+
+    // TODO rain tank level
+
+    return newConditions;
 }
 
 // Initial configuration
@@ -139,31 +202,20 @@ app.get('/notify_finished', (req, res) => {
     // 2) update model with rules
     // 3) save model back
 
-    var pGetModel = new Promise((resolve, reject) => {
-        var handle = model_symulujacy_handle;
-        handle.path = '/';
-        // cleanup - IMPORTANT
-        delete(handle.method);
-        delete(handle.headers);
+    var pGetBuilding = getHTTPGetPromise(model_symulujacy_handle, '/building');
 
-        http.get(handle, (httpRes) => {
-           var data = "";
-           httpRes.on('data', (chunk) => {
-               data += chunk;
-           });
-           httpRes.on('end', () => {
-               var response = JSON.parse(data);
-               resolve(response);
-           });
-        });
-    });
+    var pGetConditions = getHTTPGetPromise(model_symulujacy_handle, '/');
 
+    var buildingModel = {};
 
-    pGetModel.then((result) => {
-        return applyRules(result);
+    pGetBuilding.then((building) => {
+        buildingModel = building;
+        return pGetConditions;
+    }).then((conditions) => {
+        return applyRules(conditions, buildingModel);
     })
-    .then((result) => {
-        return getSetModelPromise(result);
+    .then((newConditions) => {
+        return getSetModelPromise(newConditions);
     })
     .then((httpResult) => {
         res.status(200).end();
