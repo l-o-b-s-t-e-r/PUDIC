@@ -86,6 +86,28 @@ function getHTTPPutRequestPromise(handle, path) {
     });
 }
 
+function getNotifyFinishedPromise() {
+    return new Promise((resolve, reject) => {
+        var handle = aktualizator_modeli_symulujacych;
+        handle.path = '/notify_finished';
+
+        http.get(handle, (httpRes) => {
+            var httpStatusCode = httpRes.statusCode;
+            httpRes.on('data', (chunk) => {
+                // ignore
+            });
+            httpRes.on('end', () => {
+                if(httpStatusCode == 200) {
+                    resolve(200);
+                }
+                else {
+                    reject(500);
+                }
+            });
+        });
+    });
+}
+
 // Initial configuration
 definePort();
 app.listen(port, () =>
@@ -127,28 +149,8 @@ app.put('/new_house_state', (req, res) => {
         }
     }
 
-    var pNotifyFinished = new Promise((resolve, reject) => {
-        var handle = aktualizator_modeli_symulujacych;
-        handle.path = '/notify_finished';
-
-        http.get(handle, (httpRes) => {
-            var httpStatusCode = httpRes.statusCode;
-            httpRes.on('data', (chunk) => {
-                // ignore
-            });
-            httpRes.on('end', () => {
-                if(httpStatusCode == 200) {
-                    resolve(200);
-                }
-                else {
-                    reject(500);
-                }
-            });
-        });
-    });
-
     if(requestStack.length === 0) {
-        pNotifyFinished.then((result) => {
+        getNotifyFinishedPromise().then((result) => {
             res.status(200).end();
         })
         .catch((e) => {
@@ -159,7 +161,7 @@ app.put('/new_house_state', (req, res) => {
     else {
         Promise.all(requestStack).then(responseCodes => {
             console.log(responseCodes);
-            return pNotifyFinished;
+            return getNotifyFinishedPromise();
         })
         .then((result) => {
             res.status(200).end();
