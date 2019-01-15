@@ -130,6 +130,11 @@ function applyRules(conditions, buildingModel) {
                     }
                 }
             }
+            else if(conditions.temperature.inside[singleRoom] < 20) {
+                // if all windows are closed slowly go to 20 degrees in the room
+                var newTemperature = Math.min(conditions.temperature.inside[singleRoom] + 0.5, 20);
+                newConditions.temperature.inside[singleRoom] = newTemperature;
+            }
         }
     }
 
