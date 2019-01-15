@@ -133,7 +133,13 @@ function applyRules(conditions, buildingModel) {
         }
     }
 
-    // TODO rain tank level
+    // rain tank level
+    if(conditions.raining) {
+        newConditions.rain_tank_level = Math.min(conditions.rain_tank_level + 10, 100);
+    }
+    else {
+        newConditions.rain_tank_level = Math.max(conditions.rain_tank_level - 5, 0);
+    }
 
     return newConditions;
 }
