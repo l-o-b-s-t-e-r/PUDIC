@@ -11,9 +11,11 @@ var port = 8400;
 const module_name = "Model symulujacy";
 const help = `<pre>Aplikacja: Modele symulujące
 API - GET:
- - /			- zwraca nazwe aplikacji
+ - /			- zwraca obecny stan wewnetrzny
  - /status		- zwraca obecny stan wewnetrzny
  - /help		- wyswietla pomoc
+ - /building    - zwraca obiekt JSON bedacy definicja powiazan
+                  pokoi z oknami i drzwiami
  - /rain		- zwraca obiekt
 				{ "is_raining" : true/false }
  - /rain_tank_level	- zwraca obiekt
@@ -93,7 +95,19 @@ var conditions = {
 	, "rain_tank_level" : 45
 };
 
-
+// holds bindings of doors, windows with rooms
+var building = {
+    "rooms" : {
+        "0" : {
+            "windows" : []
+            , "doors" : [ "1" ]
+        }
+        , "1" : {
+            "windows" : ["1", "2"]
+            , "doors" : ["1"]
+        }
+    }
+}
 
 app.get('/', (req, res) => res.send(conditions));
 
@@ -198,6 +212,10 @@ app.put('/temperature/:value', (req, res) => {
 	res.status(200).end();
 });
 
+
+app.get('/building', (_, res) => {
+    res.send(building);
+});
 
 app.put('/update_model', (req, res) => {
     console.log("Received 'model_symulujacy' - /update_model: " + JSON.stringify(req.body));
