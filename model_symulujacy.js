@@ -212,6 +212,29 @@ app.put('/temperature/:value', (req, res) => {
 	res.status(200).end();
 });
 
+app.put('/temperature_inside/:value', (req, res) => {
+
+	var temperatureRaw = req.params["value"];
+
+	conditions.temperature.inside[1] = parseFloat(temperatureRaw);
+	res.status(200).end();
+});
+
+app.put('/raining/:value', (req, res) => {
+
+	var temperatureRaw = req.params["value"];
+
+	conditions.raining = parseBoolean(temperatureRaw);
+	res.status(200).end();
+});
+
+app.put('/humidity/:value', (req, res) => {
+
+	var temperatureRaw = req.params["value"];
+
+	conditions.humidity = parseFloat(temperatureRaw);
+	res.status(200).end();
+});
 
 app.get('/building', (_, res) => {
     res.send(building);

@@ -36,7 +36,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const options = {
-  hostname: 'localhost',
+  hostname: '192.168.43.76',
   port: 8700,
   path: '/new_house_state',
   method: 'PUT',

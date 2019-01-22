@@ -69,17 +69,19 @@ app.put('/house_state', (req, res) => {
     handle.headers = { 'Content-Type': 'application/json' };
 
     var innerReq = http.request(handle, (httpRes) => {
+        var data = "";
         var responseStatusCode = httpRes.statusCode;
         console.log(JSON.stringify(handle) + "\n -- Request status code: " + responseStatusCode);
 
         httpRes.on('data', (chunk) => {
             console.log(chunk);
+            data += chunk;
         });
 
         httpRes.on('end', () => {
             console.log("RESPONSE END");
             if(responseStatusCode == 200) {
-                res.status(200).end();
+                res.status(200).send(data);
             }
             else {
                 res.status(500).end();

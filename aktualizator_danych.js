@@ -131,15 +131,16 @@ app.get('/update', (_, res) => {
         var modelResponse = newConditions;
 
         var req = http.request(handle_modele_wewnetrzne, (httpRes) => {
+            var data = '';
             var responseStatusCode = httpRes.statusCode;
 
-            httpRes.on('data', (chunk) => {
-                // ignore..?
-            });
+        		httpRes.on('data', (chunk) => {
+        			data += chunk;
+        		});
 
             httpRes.on('end', () => {
                 if(responseStatusCode == 200) {
-                    res.status(200).end();
+                    res.status(200).send(data);
                 }
                 else {
                     res.status(500).end();
